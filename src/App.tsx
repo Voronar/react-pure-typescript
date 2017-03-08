@@ -2,15 +2,16 @@
  * Application React component
  */
 import * as React from 'react';
-import { Link } from 'react-router';
+// import { Link } from 'react-router-dom';
+
+import Component from 'components/component/Component';
 
 export class App extends React.Component<{}, {}> {
   public render() {
     return (
-      <div>
-        <div>item111</div>
-        <Link to="/about">About1</Link>
-        {this.props.children}
+      <div className="app">
+        global
+        <Component />
       </div>
     );
   }

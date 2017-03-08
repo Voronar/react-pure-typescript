@@ -3,11 +3,11 @@
  */
 import * as express from 'express';
 import * as path from 'path';
-
 import * as webpack from 'webpack';
 import * as webpackDevMiddleware from 'webpack-dev-middleware';
 import * as webpackHotMiddleware from 'webpack-hot-middleware';
-import * as webpackConfig from './../webpack/webpack.dev.config.js';
+
+const webpackConfig: webpack.Configuration = require('../webpack/dev.config');
 
 const app: express.Application = express();
 const webpackCompiler: webpack.Compiler = webpack(webpackConfig);
@@ -18,18 +18,14 @@ app.use(webpackDevMiddleware(webpackCompiler, {
 }));
 app.use(webpackHotMiddleware(webpackCompiler));
 
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(webpackConfig.output.path, 'index.html'));
-// });
-
 // Hack because webpackDevMiddleware does not generate files to disk
-app.use('*', (req, res, next) => {
-  const filename = path.join(webpackConfig.output.path, 'index.html');
+app.use('*', (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const filename: string = path.join(webpackConfig.output.path, 'index.html');
   webpackCompiler.outputFileSystem.readFile(filename, (err: express.ErrorRequestHandler, result: express.Response) => {
     if (err) {
       return next(err);
     }
-    // tslint:disable-next-line:no-backbone-get-set-outside-model
+
     res.set('content-type', 'text/html');
     res.send(result);
     res.end();
