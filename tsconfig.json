@@ -1,20 +1,25 @@
 {
   "compilerOptions": {
+    "noUnusedLocals": true,
     "noImplicitAny": true,
     "jsx": "react",
     "module": "es2015",
     "moduleResolution": "node",
-    "target": "es5",
-    "allowJs": true
+    "target": "es2017",
+    "baseUrl": "src",
+    "typeRoots": [
+      "node_modules/@types",
+      "src/**/@types"
+    ]
   },
   "include": [
-    "client/**/*.ts",
-    "client/**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     "server/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "**/*.spec.ts",
-    "client/dist"
+    "dist"
   ]
 }

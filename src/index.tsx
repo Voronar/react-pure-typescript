@@ -1,18 +1,20 @@
 /**
  * App entry
  */
+
 import { AppProvider } from './AppProvider';
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { AppContainer } from 'react-hot-loader';
 
-const bootstrap = () => ReactDOM.render(
+require('assets/styles/main.scss');
 
+function bootstrap(): void {
+  ReactDOM.render(
     <AppProvider />,
-
-  document.getElementById('container')
-);
+    document.getElementById('container'),
+  );
+}
 
 bootstrap();
 

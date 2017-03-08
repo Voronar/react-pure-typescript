@@ -1,7 +1,39 @@
 {
   "extends": ["tslint-microsoft-contrib", "tslint-react"],
   "rules": {
+    "no-unused-variable": [true, "react"],
+    "variable-name": false,
+    "quotemark": [
+      "single",
+      "jsx-double"
+    ],
+    "trailing-comma": [
+      true,
+      {
+        "singleline": "never",
+        "multiline": "always"
+      }
+    ],
     "no-relative-imports": false,
-    "no-unused-variable": [true, "react"]
+    "import-name": false,
+    "no-backbone-get-set-outside-model": false,
+    "typedef": [
+      true,
+      "arrow-parameter",
+      "member-variable-declaration",
+      "parameter",
+      "property-declaration",
+      "variable-declaration"
+    ],
+    "ordered-imports": [false],
+    "no-default-export": false,
+    "no-require-imports": false,
+    "no-var-requires": false,
+    "member-ordering": [false],
+    "export-name": false,
+
+    "jsx-no-multiline-js": false,
+    "jsx-boolean-value": false,
+    "react-tsx-curly-spacing": false
   }
 }
