@@ -1,0 +1,7 @@
+{
+  "extends": ["tslint-microsoft-contrib", "tslint-react"],
+  "rules": {
+    "no-relative-imports": false,
+    "no-unused-variable": [true, "react"]
+  }
+}
