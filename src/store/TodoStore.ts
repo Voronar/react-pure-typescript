@@ -4,81 +4,67 @@
 
 import * as Rx from 'rxjs/Rx';
 
-import { IStore, reducer } from './utils';
+import { IReactiveStore, TStateMapper, handleAction, ReactiveStore } from './utils';
+import * as services from 'core/api/services';
 
-export interface ITodoItem {
-  id: number;
-  title: string;
-  description?: string;
-}
+const servs: any = services;
 
 export interface ITodoState {
-  list: ITodoItem[];
+  list: services.ITodoItem[];
   listFetching: boolean;
 }
 
-type IStateMapper = (state: ITodoState) => ITodoState;
-
-function getTodoService(): Promise<ITodoItem[]> {
-  return new Promise<ITodoItem[]>((resolve: (value: ITodoItem[]) => Promise<ITodoItem[]>) =>
-    setTimeout(() => resolve([
-      {
-        id: 1,
-        title: 'buy eggs',
-        description: 'chicken eggs',
-      },
-    ]), 1000));
-}
-
-export function reduceObservables<IState>(initialState: IState, ...observables: Rx.Observable<IState>[]): Rx.Observable<IState> {
-  return Rx.Observable
-    .merge<IStateMapper>(...observables)
-    .scan<IStateMapper, IState>(reducer, initialState)
-    .share();
-}
-
-export default class TodoStore implements IStore<ITodoState> {
+export default class TodoStore implements IReactiveStore<ITodoState> {
   private initialState: ITodoState = {
     list: [],
     listFetching: false,
   };
 
-  private getTodos$: Rx.Subject<ITodoItem[]> = new Rx.Subject<ITodoItem[]>();
-  private addTodo$: Rx.Subject<ITodoItem> = new Rx.Subject<ITodoItem>();
+  private store: ReactiveStore<ITodoState> = new ReactiveStore(this.initialState);
+
+  private getTodos$: Rx.Subject<services.ITodoItem[]> = new Rx.Subject<services.ITodoItem[]>();
+  private addTodo$: Rx.Subject<services.ITodoItem> = new Rx.Subject<services.ITodoItem>();
   private removeTodo$: Rx.Subject<number> = new Rx.Subject<number>();
   private listFetching$: Rx.Subject<boolean> = new Rx.Subject<boolean>();
-  private rootObservable$: Rx.Observable<ITodoState>;
 
   constructor() {
-    this.rootObservable$ = Rx.Observable.merge<IStateMapper>(
-      this.listFetching$.map<boolean, IStateMapper>(this.handleListFetching),
-      this.getTodos$.map<ITodoItem[], IStateMapper>(this.handleGetTodos),
-      this.addTodo$.map<ITodoItem, IStateMapper>(this.handleAddTodo),
-      this.removeTodo$.map<number, IStateMapper>(this.handleRemoveTodo),
-    )
-    .scan<IStateMapper, ITodoState>(reducer, this.initialState)
-    .share();
+    this.store.handleActions(
+      handleAction(this.listFetching$, this.handleListFetching),
+      handleAction(this.getTodos$, this.handleGetTodos),
+      handleAction(this.addTodo$, this.handleAddTodo),
+      handleAction(this.removeTodo$, this.handleRemoveTodo),
+    );
   }
+  /**
+   * @required
+   */
   public subscribe(next?: (value: ITodoState) => void): Rx.Subscription {
-    return this.rootObservable$.subscribe(next);
+    return this.store.subscribe(next);
   }
+  /**
+   * @required
+   */
   public getInitialState(): ITodoState {
     return this.initialState;
   }
   /**
    * @action
    */
-  public async getTodos() {
+  public async getTodos(serviceName: string) {
+    const state: ITodoState = await this.store.getState();
+
+    console.log('getTodos', state);
+
     this.listFetching$.next(true);
 
-    const items: ITodoItem[] = await getTodoService();
+    const items: services.ITodoItem[] = await servs[serviceName]();
 
     this.getTodos$.next(items);
   }
   /**
    * @reducer
    */
-  private handleGetTodos(items: ITodoItem[]): IStateMapper {
+  private handleGetTodos(items: services.ITodoItem[]): TStateMapper<ITodoState> {
     return (state: ITodoState) => ({
       ...state,
       list: [...items],
@@ -88,7 +74,7 @@ export default class TodoStore implements IStore<ITodoState> {
   /**
    * @reducer
    */
-  private handleListFetching(fetching: boolean): IStateMapper {
+  private handleListFetching(fetching: boolean): TStateMapper<ITodoState> {
     return (state: ITodoState) => ({
       ...state,
       listFetching: fetching,
@@ -97,11 +83,18 @@ export default class TodoStore implements IStore<ITodoState> {
   /**
    * @action
    */
-  public addTodo(item: ITodoItem) {
+  public async addTodo(item: services.ITodoItem) {
+
+    const state: ITodoState = await this.store.getState();
+
+    console.log('addTodo', state);
     this.listFetching$.next(true);
     setTimeout(() => this.addTodo$.next(item), 500);
   }
-  private handleAddTodo(item: ITodoItem): IStateMapper {
+  /**
+   * @reducer
+   */
+  private handleAddTodo(item: services.ITodoItem): TStateMapper<ITodoState> {
     return (state: ITodoState) => ({
       ...state,
       list: [...state.list, item],
@@ -117,9 +110,12 @@ export default class TodoStore implements IStore<ITodoState> {
       this.removeTodo$.next(removingItemId);
     }, 500);
   }
-  private handleRemoveTodo(removingItemId: number): IStateMapper {
+  /**
+   * @reducer
+   */
+  private handleRemoveTodo(removingItemId: number): TStateMapper<ITodoState> {
     return (state: ITodoState) => {
-      const list: ITodoItem[] = state.list.filter((item: ITodoItem) => item.id !== removingItemId);
+      const list: services.ITodoItem[] = state.list.filter((item: services.ITodoItem) => item.id !== removingItemId);
 
       return {
         ...state,
